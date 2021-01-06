@@ -168,6 +168,8 @@ state랑 prop 헷갈리지 마
 
 
 
+# Section. 5
+
 state 업데이트 할 때
 
 ```js
@@ -185,4 +187,120 @@ this.setState({ lat: position.coords.latitude });
 이렇게 하는거임.
 
 
+
+# Section. 6
+
+data-load하는 두가지 방법
+
+- constructor() 에서 
+- component lifecycle method(componentDidMount()) 안에서 
+
+기술적으론 어디에서 해도 괜찮은데. 공식문서나 커뮤니티 컨벤션은 componentDidMount()에서 대입하는거임.
+
+코드 혼자짤거 아니잖아? 컨벤션 지키렴. **data-loading은 무조건 componentDidMount()**임!!
+
+
+
+##### Component Lifecycle
+
+1. constructor() : one-time setup 두기 좋은 장소. 
+2. render() : **매우 자주 호출되므로, 가볍게 해야함. JSX만 리턴하도록 유지!!!**
+3. componentDidMount() : **data-loading** 하기 좋음
+4. setState()로 업데이트 발생하면 render() 다음에 componentDidUpdate() : **업데이트 될때마다 data-loading** 해야하는 코드 쓰기 좋음
+5. component 지워지면 componentWillUnmount() : **cleanup** 하기 좋음.
+6. 이거 말고도  sholdcomponentupdate, getderivedstatefromprops, getsnapshotbeforeupdate 같은 method도 있지만 아주 가~아끔 사용하므로 나중에 필요할때 찾아보렴!
+
+
+
+state initialize할 때
+
+```js
+  constructor(props) {
+    super(props);
+
+    this.state = { lat: null, errorMessage: null };
+  }
+```
+
+이렇게 constructor()안에 쓰는거 말고
+
+```js
+class App extends React.Component {
+  state = { lat: null, errorMessage: null };
+}
+```
+
+그냥 이렇게 app class 안에 써도 위에꺼랑 같음.
+
+babel 통해서 변역?될 때 위에처럼 코드가 자동으로 바뀜.
+
+그래서 위처럼 constructor 쓰면서 코드 늘릴이유 없음!!! 
+
+
+
+css 설정할때 component 최상위 html태그의 className은 snake case로 component 이름을 적어두면 나중에 좋음.
+
+ex) SeasonDisplay.js 이라면
+
+```jsx
+<div className={`season-display ${season}`}>
+```
+
+이렇게 시작!
+
+
+
+children component에서 props를 통해서 인자?를 받는데, 만약 깜빡하고 안넘겨주면? 그럴수도 있겠지! 아니면 특이사항이 없을수도 있고! 그럴때를 대비해서 default값을 설정해둘 수 있음. function parameter 기본값 설정하는거랑 비슷하다고 볼 수 있겠군.
+
+component.js 파일 안에 이렇게!!
+
+```js
+import React from 'react';
+
+const Spinner = (props) => {
+  return (
+    <div className="ui active dimmer">
+      <div className="ui big text loader">{props.message}</div>
+    </div>
+  );
+};
+
+Spinner.defaultProps = {
+  message: 'Loading...'
+}
+
+export default Spinner;
+```
+
+
+
+**render() 함수에서 return 시킬때는 안에 if문 같은거 쓰지마!!** multiple return statement 안된다!!!
+
+나중에 전체에 적용해야 하는 수정사항이 발생하면 수정하기 귀찮음.
+
+if문을 다른 함수에 넣고 그 함수를 render의 return에서 실행시키렴.
+
+render의 return에는 항상 심플하게!
+
+```js
+renderContent() {
+    if (this.state.errorMessage && !this.state.lat) {
+      return <div>Error: {this.state.errorMessage}</div>;
+    }
+
+    if (!this.state.errorMessage && this.state.lat) {
+      return <SeasonDisplay lat={this.state.lat} />;
+    }
+
+    return <Spinner />;
+  }
+
+  render() {
+    return (
+      <div className="border red">
+        {this.renderContent()}
+      </div>
+    );
+  }
+```
 
